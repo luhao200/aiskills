@@ -1,0 +1,6 @@
+si {interface}
+speed {speed}
+connect
+r
+g
+exit

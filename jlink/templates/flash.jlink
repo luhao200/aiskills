@@ -1,0 +1,7 @@
+si {interface}
+speed {speed}
+connect
+loadfile {file}
+r
+g
+exit
