@@ -13,6 +13,8 @@ from pathlib import Path
 # 错误模式匹配
 ERROR_PATTERNS = [
     (r"Error:\s*open failed", "adapter_open_failed", "调试器打开失败，请检查 USB 连接和驱动"),
+    (r"Error:\s*Failed to open device", "adapter_open_failed", "调试器打开失败，请检查 USB 连接和驱动"),
+    (r"Error:\s*No.+device found", "no_device", "未找到调试器设备，请检查 USB 连接和驱动"),
     (r"Error:\s*unable to find.+cfg", "cfg_not_found", "未找到指定的配置文件，请确认 cfg 路径"),
     (r"Error:\s*Transport .+ is not selected", "transport_error", "传输协议未选择，请检查 transport 设置"),
     (r"Error:\s*init mode failed", "init_failed", "初始化失败，请检查连线、供电和配置组合"),
@@ -20,10 +22,11 @@ ERROR_PATTERNS = [
     (r"Error:\s*flash write failed", "flash_write_failed", "Flash 写入失败，请检查固件文件和目标状态"),
     (r"Error:\s*timed out while waiting for target halted", "target_timeout", "等待目标暂停超时，请检查连接"),
     (r"Error:\s*couldn't bind .+ to socket", "port_busy", "端口被占用，请检查是否有其他 OpenOCD 实例运行"),
-    (r"Error:\s*no device found", "no_device", "未找到目标设备，请检查连线和供电"),
     (r"Error:\s*Target not examined yet", "target_not_examined", "目标未初始化，请检查 target 配置"),
     (r"Error:\s*flash bank", "flash_bank_error", "Flash bank 配置错误，请确认 target 配置匹配芯片"),
     (r"Error:\s*device is read protected", "read_protected", "芯片读保护已开启，需要先解锁（本工具不自动解锁）"),
+    (r"Error:\s*Cannot connect", "cannot_connect", "无法连接目标，请检查连线、供电和接口类型"),
+    (r"Error:\s*Could not connect", "cannot_connect", "无法连接目标，请检查连线、供电和接口类型"),
 ]
 
 
@@ -278,7 +281,12 @@ def run_openocd(exe: str, action: str, board: str = "", interface: str = "",
                 summary = f"探测失败，返回码: {proc.returncode}"
         else:
             status = "error"
-            summary = f"执行返回非零退出码: {proc.returncode}"
+            # 从输出中提取 Error 行作为补充信息
+            error_lines = re.findall(r"Error:\s*(.+)", combined)
+            if error_lines:
+                summary = f"失败: {error_lines[-1].strip()}"
+            else:
+                summary = f"执行返回非零退出码: {proc.returncode}"
     else:
         status = "ok"
 
