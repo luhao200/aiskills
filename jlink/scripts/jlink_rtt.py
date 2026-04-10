@@ -205,6 +205,15 @@ def main():
                     break
                 time.sleep(0.01)
                 continue
+            # 过滤 RTTClient 自身 banner 和状态信息
+            stripped = line.strip()
+            if (stripped.startswith("###RTT Client:") or
+                    stripped.startswith("SEGGER J-Link") or
+                    stripped.startswith("Process:") or
+                    stripped == "" or
+                    stripped.startswith("***") or
+                    stripped.startswith("---")):
+                continue
             output_rtt_line(line, args.channel, args.as_json)
 
     except KeyboardInterrupt:

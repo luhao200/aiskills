@@ -15,9 +15,9 @@ TEMPLATES = {
     "info": "si {interface}\nspeed {speed}\nconnect\nsleep 200\nexit\n",
     "flash_hex": "si {interface}\nspeed {speed}\nconnect\nloadfile {file}\nr\ng\nexit\n",
     "flash_bin": "si {interface}\nspeed {speed}\nconnect\nloadbin {file},{address}\nr\ng\nexit\n",
-    "read_mem": "si {interface}\nspeed {speed}\nconnect\nmem{width} {address},{length}\nexit\n",
-    "write_mem": "si {interface}\nspeed {speed}\nconnect\nw{width} {address},{value}\nexit\n",
-    "regs": "si {interface}\nspeed {speed}\nconnect\nregs\nexit\n",
+    "read_mem": "si {interface}\nspeed {speed}\nconnect\nhalt\nmem{width} {address},{length}\nexit\n",
+    "write_mem": "si {interface}\nspeed {speed}\nconnect\nhalt\nw{width} {address},{value}\nexit\n",
+    "regs": "si {interface}\nspeed {speed}\nconnect\nhalt\nregs\nexit\n",
     "reset": "si {interface}\nspeed {speed}\nconnect\nr\ng\nexit\n",
 }
 
@@ -77,12 +77,14 @@ def parse_output(stdout: str, action: str) -> dict:
 
     # read-mem: 提取内存数据
     elif action == "read-mem":
-        # 匹配 hex dump 行: 08000000 = 20020000 08005BED ...
-        mem_lines = re.findall(r"([0-9A-Fa-f]{8})\s*=\s*((?:[0-9A-Fa-f]+\s*)+)", stdout)
+        # 匹配 hex dump 行: 08000000 = 20020000 08005BED 080024C7 08002377
+        mem_lines = re.findall(r"^([0-9A-Fa-f]{8}) = (.+)$", stdout, re.MULTILINE)
         if mem_lines:
             result["memory"] = []
             for addr, data in mem_lines:
-                result["memory"].append({"address": f"0x{addr}", "data": data.strip()})
+                # 只保留十六进制数据部分，去掉尾部空白
+                cleaned = data.strip()
+                result["memory"].append({"address": f"0x{addr}", "data": cleaned})
 
     # regs: 提取寄存器值
     elif action == "regs":
@@ -112,14 +114,16 @@ def run_jlink(exe: str, device: str, action: str, interface: str = "SWD",
             template = TEMPLATES["flash_bin"]
         else:
             template = TEMPLATES["flash_hex"]
-    elif action in TEMPLATES:
-        template = TEMPLATES[action]
     else:
-        return {
-            "status": "error",
-            "action": action,
-            "error": {"code": "unknown_action", "message": f"未知子命令: {action}"},
-        }
+        template_key = action.replace("-", "_")
+        if template_key in TEMPLATES:
+            template = TEMPLATES[template_key]
+        else:
+            return {
+                "status": "error",
+                "action": action,
+                "error": {"code": "unknown_action", "message": f"未知子命令: {action}"},
+            }
 
     # width 映射
     width_map = {"8": "8", "16": "16", "32": "32"}
