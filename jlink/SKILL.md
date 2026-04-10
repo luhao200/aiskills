@@ -22,6 +22,7 @@ skill 目录下的 `config.json` 包含运行时配置，首次使用前确认 `
   "exe": "C:\\Program Files\\SEGGER\\JLink\\JLink.exe",
   "gdbserver_exe": "C:\\Program Files\\SEGGER\\JLink\\JLinkGDBServerCL.exe",
   "rtt_exe": "C:\\Program Files\\SEGGER\\JLink\\JLinkRTTClient.exe",
+  "gdb_exe": "C:\\Program Files\\Arm\\GNU Toolchain mingw-w64-x86_64-arm-none-eabi\\bin\\arm-none-eabi-gdb.exe",
   "default_device": "",
   "default_interface": "SWD",
   "default_speed": "4000",
@@ -34,6 +35,7 @@ skill 目录下的 `config.json` 包含运行时配置，首次使用前确认 `
 - `exe`：JLink.exe 完整路径（必填）
 - `gdbserver_exe`：JLinkGDBServerCL.exe 路径，RTT 和 GDB 调试需要
 - `rtt_exe`：JLinkRTTClient.exe 路径
+- `gdb_exe`：arm-none-eabi-gdb 路径，GDB 源码级调试需要
 - `default_device`：默认芯片型号（如 GD32F470ZG），为空时需用户指定
 - `default_interface`：调试接口，SWD 或 JTAG，默认 SWD
 - `default_speed`：调试速率 kHz，默认 4000
